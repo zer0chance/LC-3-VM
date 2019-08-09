@@ -11,7 +11,6 @@
 #include <sys/termios.h>
 #include <sys/mman.h>
 
-uint16_t memeory[UINT16_MAX];
 
 enum
 {
@@ -28,7 +27,6 @@ enum
     R_COUNT
 };
 
-uint16_t reg[R_COUNT];
 
 enum
 {
@@ -56,3 +54,18 @@ enum
     FL_ZRO = 1 << 1, /* Z */
     FL_NEG = 1 << 2, /* N */
 };
+
+
+
+uint16_t memeory[UINT16_MAX];
+
+uint16_t reg[R_COUNT];
+
+
+uint16_t sign_extended(uint16_t x, int bit_count)
+{
+ 	if((x >> bit_count) & 1)
+ 		x |= (0xFFFF << bit_count);
+
+ 	return x;	 
+}
