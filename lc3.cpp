@@ -89,6 +89,12 @@ uint16_t sign_extended(uint16_t x, int bit_count)
 }
 
 
+uint16_t swap16(uint16_t x)
+{
+    return (x << 8) | (x >> 8);
+}
+
+
 void update_flags(uint16_t r)
 {
 	if (reg[r] == 0)
@@ -98,13 +104,6 @@ void update_flags(uint16_t r)
 		reg[R_COND] = FL_NEG;
 
 	else reg[R_COND] = FL_POS;
-}
-
-
-
-uint16_t swap16(uint16_t x)
-{
-    return (x << 8) | (x >> 8);
 }
 
 
@@ -130,7 +129,6 @@ void read_image_file(FILE* file)
 }
 
 
-
 int read_image(const char* image_path)
 {
     FILE* file = fopen(image_path, "rb");
@@ -139,6 +137,20 @@ int read_image(const char* image_path)
     fclose(file);
     return 1;
 }
+
+
+uint16_t check_key()
+{
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+    return select(1, &readfds, NULL, NULL, &timeout) != 0;
+}
+
 
 
 void mem_write(uint16_t address, uint16_t val)
@@ -167,19 +179,6 @@ uint16_t mem_read(uint16_t address)
 }
 
 
-uint16_t check_key()
-{
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(STDIN_FILENO, &readfds);
-
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-    return select(1, &readfds, NULL, NULL, &timeout) != 0;
-}
-
-
 struct termios original_tio;
 
 void disable_input_buffering()
@@ -205,7 +204,7 @@ void handle_interrupt(int signal)
 }
 
 
-int main(int argc, char const *argv[])
+int main(int argc, const char *argv[])
 {
     if (argc < 2)
 	{
@@ -223,8 +222,8 @@ int main(int argc, char const *argv[])
 	    }
 	}
 
-    {Setup, 12}
-
+    signal(SIGINT, handle_interrupt);
+	disable_input_buffering();
     /* set the PC to starting position */
     /* 0x3000 is the default */
     enum { PC_START = 0x3000 };
@@ -321,7 +320,7 @@ int main(int argc, char const *argv[])
 
                 	uint16_t baseR = (instr >> 6) & 0x7;
 
-                	uint16_t jump_flag = (inst >> 11) & 0x1;
+                	uint16_t jump_flag = (instr >> 11) & 0x1;
 
                 	uint16_t pc_offset = sign_extended(instr & 0x7FF, 11);
 
@@ -386,7 +385,7 @@ int main(int argc, char const *argv[])
                 	uint16_t r0 = (instr >> 9) & 0x7;
                 	uint16_t offset = sign_extended(instr & 0x1FF, 9);
 
-                	mem_write(reg[R_PC] + pc_offset, reg[r0]);
+                	mem_write(reg[R_PC] + offset, reg[r0]);
                 }
                 break;
 
@@ -395,7 +394,7 @@ int main(int argc, char const *argv[])
                 	uint16_t r0 = (instr >> 9) & 0x7;
                 	uint16_t offset = sign_extended(instr & 0x1FF, 9);
 
-                	mem_write(memory_read(reg[R_PC] + pc_offset), reg[r0]);
+                	mem_write(mem_read(reg[R_PC] + offset), reg[r0]);
                 }
                 break;
 
@@ -407,7 +406,7 @@ int main(int argc, char const *argv[])
 
                 	uint16_t offset = sign_extended(instr & 0x3F, 9);
 
-                	mem_write(reg[r1] + offset, reg[r0]);
+                	mem_write(reg[baseR] + offset, reg[r0]);
                 }
                 break;
 
@@ -480,7 +479,7 @@ int main(int argc, char const *argv[])
             case OP_RTI:
 
             default:
-                {BAD OPCODE, 7}
+               	abort();
                 break;
         }
     }
