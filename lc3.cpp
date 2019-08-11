@@ -57,7 +57,7 @@ enum
 
 
 
-uint16_t memeory[UINT16_MAX];
+uint16_t memory[UINT16_MAX];
 
 uint16_t reg[R_COUNT];
 
@@ -250,7 +250,12 @@ int main(int argc, char const *argv[])
                 break;
 
             case OP_ST:
-                {ST, 7}
+                {
+                	uint16_t r0 = (instr >> 9) & 0x7;
+                	uint16_t offset = sign_extended(instr & 0x1FF, 9);
+
+                	mem_write(reg[R_PC] + pc_offset, reg[r0]);
+                }
                 break;
 
             case OP_STI:
