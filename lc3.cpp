@@ -239,7 +239,14 @@ int main(int argc, char const *argv[])
                 break;
 
             case OP_LEA:
-                {LEA, 7}
+                {
+                	uint16_t r0 = (instr >> 9) & 0x7;
+                	uint16_t offset = sign_extended(instr & 0x1FF, 9);
+
+                	reg[r0] = reg[R_PC] + offset;
+
+                	update_flags(r0);
+                }
                 break;
 
             case OP_ST:
