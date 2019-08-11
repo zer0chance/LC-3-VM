@@ -125,6 +125,8 @@ int main(int argc, char const *argv[])
                 		uint16_t r2 = sign_extend(instr & 0x1F, 5);
                 		reg[r0] = reg[r1] + reg[r2]; 
                 	}
+
+                	update_flags(r0);
                 }
                 break;
 
@@ -153,7 +155,15 @@ int main(int argc, char const *argv[])
                 break;
 
             case OP_LDI:
-                {LDI, 6}
+                {
+                	uint16_t r0 = (instr >> 9) & 0x7;
+
+                	uint16_t pc_offset = sign_extended(instr & 0x1FF, 9);
+
+                	reg[r0] = mem_read(mem_read(reg[R_PC] + pc_offset));
+
+                	update_flags(r0); 
+                }
                 break;
 
             case OP_LDR:
