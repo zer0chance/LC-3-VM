@@ -184,7 +184,20 @@ int main(int argc, char const *argv[])
                 break;
 
             case OP_JSR:
-                {JSR, 7}
+                {
+                	reg[R_R7] = reg[R_PC];
+
+                	uint16_t baseR = (instr >> 6) & 0x7;
+
+                	uint16_t jump_flag = (inst >> 11) & 0x1;
+
+                	uint16_t pc_offset = sign_extended(instr & 0x7FF, 11);
+
+                	if (jump_flag)
+                		reg[R_PC] += pc_offset;
+                	else
+                		reg[R_PC] = reg[baseR];          		 
+                }
                 break;
 
             case OP_LD:
@@ -204,7 +217,9 @@ int main(int argc, char const *argv[])
                 break;
 
             case OP_LDR:
-                {LDR, 7}
+                {
+                	
+                }
                 break;
 
             case OP_LEA:
