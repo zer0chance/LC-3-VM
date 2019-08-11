@@ -69,3 +69,77 @@ uint16_t sign_extended(uint16_t x, int bit_count)
 
  	return x;	 
 }
+
+
+int main(int argc, char const *argv[])
+{
+    {Load Arguments, 12}
+    {Setup, 12}
+
+    /* set the PC to starting position */
+    /* 0x3000 is the default */
+    enum { PC_START = 0x3000 };
+    reg[R_PC] = PC_START;
+
+    int running = 1;
+    while (running)
+    {
+        /* FETCH */
+        uint16_t instr = mem_read(reg[R_PC]++);
+        uint16_t op = instr >> 12;
+
+        switch (op)
+        {
+            case OP_ADD:
+                {ADD, 6}
+                break;
+            case OP_AND:
+                {AND, 7}
+                break;
+            case OP_NOT:
+                {NOT, 7}
+                break;
+            case OP_BR:
+                {BR, 7}
+                break;
+            case OP_JMP:
+                {JMP, 7}
+                break;
+            case OP_JSR:
+                {JSR, 7}
+                break;
+            case OP_LD:
+                {LD, 7}
+                break;
+            case OP_LDI:
+                {LDI, 6}
+                break;
+            case OP_LDR:
+                {LDR, 7}
+                break;
+            case OP_LEA:
+                {LEA, 7}
+                break;
+            case OP_ST:
+                {ST, 7}
+                break;
+            case OP_STI:
+                {STI, 7}
+                break;
+            case OP_STR:
+                {STR, 7}
+                break;
+            case OP_TRAP:
+                {TRAP, 8}
+                break;
+            case OP_RES:
+            case OP_RTI:
+            default:
+                {BAD OPCODE, 7}
+                break;
+        }
+    }
+    {Shutdown, 12}
+    
+	return 0;
+}
