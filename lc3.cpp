@@ -268,9 +268,17 @@ int main(int argc, char const *argv[])
                 break;
 
             case OP_STR:
-                {STR, 7}
+                {
+                	uint16_t r0 = (instr >> 9) & 0x7;
+
+                	uint16_t baseR = (instr >> 6) & 0x7;
+
+                	uint16_t offset = sign_extended(instr & 0x3F, 9);
+
+                	mem_write(reg[r1] + offset, reg[r0]);
+                }
                 break;
-                
+
             case OP_TRAP:
                 {TRAP, 8}
                 break;
