@@ -71,6 +71,23 @@ uint16_t sign_extended(uint16_t x, int bit_count)
 }
 
 
+void update_flags(uint16_t r)
+{
+	if (reg[r] == 0)
+		reg[R_COND] = FL_ZRO;
+
+	else if (reg[r] >> 15)
+		reg[R_COND] = FL_NEG;
+
+	else reg[R_COND] = FL_POS;
+}
+
+
+
+
+
+
+
 int main(int argc, char const *argv[])
 {
     {Load Arguments, 12}
@@ -140,6 +157,6 @@ int main(int argc, char const *argv[])
         }
     }
     {Shutdown, 12}
-    
+
 	return 0;
 }
