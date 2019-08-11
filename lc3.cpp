@@ -55,6 +55,14 @@ enum
     FL_NEG = 1 << 2, /* N */
 };
 
+
+enum
+{
+    MR_KBSR = 0xFE00, /* keyboard status */
+    MR_KBDR = 0xFE02  /* keyboard data */
+};
+
+
 enum
 {
     TRAP_GETC = 0x20,  /* get character from keyboard, not echoed onto the terminal */
@@ -65,11 +73,6 @@ enum
     TRAP_HALT = 0x25   /* halt the program */
 };
 
-enum
-{
-    MR_KBSR = 0xFE00, /* keyboard status */
-    MR_KBDR = 0xFE02  /* keyboard data */
-};
 
 
 uint16_t memory[UINT16_MAX];
@@ -159,16 +162,67 @@ uint16_t mem_read(uint16_t address)
             memory[MR_KBSR] = 0;
         }
     }
+
     return memory[address];
 }
 
 
+uint16_t check_key()
+{
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
 
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+    return select(1, &readfds, NULL, NULL, &timeout) != 0;
+}
+
+
+struct termios original_tio;
+
+void disable_input_buffering()
+{
+    tcgetattr(STDIN_FILENO, &original_tio);
+    struct termios new_tio = original_tio;
+    new_tio.c_lflag &= ~ICANON & ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+}
+
+
+void restore_input_buffering()
+{
+    tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+}
+
+
+void handle_interrupt(int signal)
+{
+    restore_input_buffering();
+    printf("\n");
+    exit(-2);
+}
 
 
 int main(int argc, char const *argv[])
 {
-    {Load Arguments, 12}
+    if (argc < 2)
+	{
+	    /* show usage string */
+	    printf("lc3 [image-file1] ...\n");
+	    exit(2);
+	}
+
+	for (int j = 1; j < argc; ++j)
+	{
+	    if (!read_image(argv[j]))
+	    {
+	        printf("failed to load image: %s\n", argv[j]);
+	        exit(1);
+	    }
+	}
+
     {Setup, 12}
 
     /* set the PC to starting position */
@@ -430,7 +484,7 @@ int main(int argc, char const *argv[])
                 break;
         }
     }
-    {Shutdown, 12}
+    restore_input_buffering();
 
 	return 0;
 }
